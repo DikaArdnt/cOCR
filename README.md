@@ -68,6 +68,9 @@ Choose the method that matches your setup:
 3. Open the extracted folder and double-click `cOCR.exe` on Windows, `cOCR Workbench.app` on macOS, or `cOCR` on Linux.
 4. The cOCR Workbench desktop window opens.
 
+> [!NOTE]
+> The pre-built macOS package (`cOCR Workbench.app`) is not yet available for download. The macOS build is still in the testing stage and needs testers. In the meantime, macOS users can run cOCR from source (see the [Developer Guide](#developer-guide-installation-and-running-from-source)).
+
 #### Option 2: Using the Local Repository on Windows
 If you already have a copy of this repository on Windows:
 1. Open the project folder.
@@ -402,6 +405,9 @@ The compiled binary is written to **`dist/cOCR_Workbench/cOCR`**.
 
 ### 3. Building on macOS (Apple Silicon and Intel)
 
+> [!WARNING]
+> The macOS build is **not yet available** on the releases page because it is still in the testing stage. We are looking for macOS testers (Intel and Apple Silicon). If you can help, build from source using the steps below and report any issues you encounter.
+
 macOS includes the Cocoa WebKit engine natively:
 
 1. Run the build script:
@@ -438,7 +444,7 @@ git push origin v1.2.0
 ```
 
 GitHub Actions will:
-1. Build binaries on four targets: Windows x64, Linux x64, macOS ARM64 (Apple Silicon), and macOS x86_64 (Intel).
+1. Build binaries on Windows x64 and Linux x64. The macOS targets (ARM64/Apple Silicon and Intel) are temporarily disabled while the macOS build is in testing — see [Building on macOS](#3-building-on-macos).
 2. Archive outputs into `.zip` and `.tar.gz` packages.
 3. Attach binary release assets directly to GitHub Releases.
 

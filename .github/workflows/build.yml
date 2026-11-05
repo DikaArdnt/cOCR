@@ -28,19 +28,21 @@ jobs:
             archive_name: cOCR-Linux-x64.tar.gz
             run_cmd: python3 build_tools/build_exe.py --mode onedir
 
+          # TEMPORARILY DISABLED: macOS build is still in testing (needs testers).
+          # To re-enable, uncomment the two macOS matrix entries below.
           # macOS Apple Silicon (ARM64)
-          - os: macos-latest
-            arch: arm64
-            artifact_name: cOCR-macOS-AppleSilicon
-            archive_name: cOCR-macOS-AppleSilicon.zip
-            run_cmd: python3 build_tools/build_exe.py --mode onedir
+          # - os: macos-latest
+          #   arch: arm64
+          #   artifact_name: cOCR-macOS-AppleSilicon
+          #   archive_name: cOCR-macOS-AppleSilicon.zip
+          #   run_cmd: python3 build_tools/build_exe.py --mode onedir
 
           # macOS Intel (x86_64)
-          - os: macos-13
-            arch: x86_64
-            artifact_name: cOCR-macOS-Intel
-            archive_name: cOCR-macOS-Intel.zip
-            run_cmd: python3 build_tools/build_exe.py --mode onedir
+          # - os: macos-13
+          #   arch: x86_64
+          #   artifact_name: cOCR-macOS-Intel
+          #   archive_name: cOCR-macOS-Intel.zip
+          #   run_cmd: python3 build_tools/build_exe.py --mode onedir
 
     steps:
       - name: Checkout Code

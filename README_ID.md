@@ -68,6 +68,9 @@ Pilih salah satu cara berikut sesuai paket yang Anda miliki di komputer:
 3. Buka folder hasil ekstrak, lalu klik ganda berkas **`cOCR.exe`** (pada Windows), **`cOCR Workbench.app`** (pada macOS), atau **`cOCR`** (pada Linux).
 4. Jendela aplikasi desktop cOCR Workbench akan langsung terbuka di layar komputer Anda.
 
+> [!NOTE]
+> Paket aplikasi macOS (`cOCR Workbench.app`) belum tersedia untuk diunduh karena masih dalam tahap pengujian (membutuhkan tester). Sementara itu, pengguna macOS dapat menjalankan cOCR dari kode sumber (lihat [Panduan Pengembang](#panduan-pengembang-instalasi-dan-menjalankan-dari-kode-sumber)).
+
 #### Opsi 2: Menggunakan Repositori Lokal di Windows
 Jika Anda memiliki salinan folder proyek ini di Windows:
 1. Buka folder proyek cOCR.
@@ -403,6 +406,9 @@ Hasil kompilasi akan tersimpan di **`dist/cOCR_Workbench/cOCR`**.
 
 ### 3. Build di macOS (Apple Silicon M-Series dan Intel)
 
+> [!WARNING]
+> Build macOS **belum tersedia** di halaman rilis karena masih dalam tahap pengujian. Kami membutuhkan tester macOS (Intel maupun Apple Silicon). Jika Anda bersedia membantu, silakan build dari kode sumber dengan langkah di bawah ini dan laporkan masalah yang ditemukan.
+
 macOS telah menyertakan mesin WebKit Cocoa bawaan secara langsung dari sistem operasi:
 
 1. Jalankan skrip pembangun:
@@ -437,7 +443,7 @@ git tag v1.2.0
 git push origin v1.2.0
 ```
 Server GitHub Actions akan secara otomatis:
-1. Membangun berkas executable pada empat sistem operasi sekaligus: Windows x64, Linux x64, macOS ARM64 (Apple Silicon), dan macOS x86_64 (Intel).
+1. Membangun berkas executable untuk Windows x64 dan Linux x64. Target macOS (ARM64/Apple Silicon dan Intel) dinonaktifkan sementara selama build macOS masih dalam tahap pengujian — lihat [Build di macOS](#3-build-di-macos).
 2. Memaketkannya menjadi arsip `.zip` dan `.tar.gz`.
 3. Memublikasikan arsip biner siap unduh langsung ke halaman rilis repositori (GitHub Releases).
 
