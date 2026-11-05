@@ -442,6 +442,8 @@ Setiap kali Anda membuat tag rilis Git (misalnya `v1.2.0`) dan mendorongnya ke r
 git tag v1.2.0
 git push origin v1.2.0
 ```
+
+Anda juga dapat mempublikasikan rilis secara manual: jalankan workflow dari tab **Actions** (Run workflow) dan isi input `release_tag` (misalnya `v1.2.0`). Build yang dijalankan tanpa tag dan tanpa `release_tag` hanya menghasilkan arsip di halaman run workflow, tanpa membuat GitHub Release.
 Server GitHub Actions akan secara otomatis:
 1. Membangun berkas executable untuk Windows x64 dan Linux x64. Target macOS (ARM64/Apple Silicon dan Intel) dinonaktifkan sementara selama build macOS masih dalam tahap pengujian — lihat [Build di macOS](#3-build-di-macos).
 2. Memaketkannya menjadi arsip `.zip` dan `.tar.gz`.

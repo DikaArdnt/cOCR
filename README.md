@@ -443,6 +443,8 @@ git tag v1.2.0
 git push origin v1.2.0
 ```
 
+You can also publish a release manually: run the workflow from the **Actions** tab (Run workflow) and fill in the `release_tag` input (for example `v1.2.0`). Builds triggered without a tag and without `release_tag` produce artifacts on the workflow run page only, with no GitHub Release.
+
 GitHub Actions will:
 1. Build binaries on Windows x64 and Linux x64. The macOS targets (ARM64/Apple Silicon and Intel) are temporarily disabled while the macOS build is in testing — see [Building on macOS](#3-building-on-macos).
 2. Archive outputs into `.zip` and `.tar.gz` packages.
