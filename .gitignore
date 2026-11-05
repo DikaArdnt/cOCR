@@ -1,0 +1,27 @@
+# Agents
+.agents
+.claude
+skills-lock.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# Build
+build/
+dist/
+
+# Private Configuration
+watermarks.json
+.env
+
+# Ignore example configuration files
+!watermarks.example.json
+!.env.example
+
+# Temporary & Outputs
+temp_uploads/
+output/
+outputs/
+samples/output/

@@ -1,0 +1,101 @@
+name: Build Multi-Platform Executables
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }} (${{ matrix.arch }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Windows x86_64
+          - os: windows-latest
+            arch: x64
+            artifact_name: cOCR-Windows-x64
+            archive_name: cOCR-Windows-x64.zip
+            run_cmd: python build_tools/build_exe.py --mode onedir
+
+          # Linux Ubuntu x86_64
+          - os: ubuntu-latest
+            arch: x64
+            artifact_name: cOCR-Linux-x64
+            archive_name: cOCR-Linux-x64.tar.gz
+            run_cmd: python3 build_tools/build_exe.py --mode onedir
+
+          # macOS Apple Silicon (ARM64)
+          - os: macos-latest
+            arch: arm64
+            artifact_name: cOCR-macOS-AppleSilicon
+            archive_name: cOCR-macOS-AppleSilicon.zip
+            run_cmd: python3 build_tools/build_exe.py --mode onedir
+
+          # macOS Intel (x86_64)
+          - os: macos-13
+            arch: x86_64
+            artifact_name: cOCR-macOS-Intel
+            archive_name: cOCR-macOS-Intel.zip
+            run_cmd: python3 build_tools/build_exe.py --mode onedir
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install System Dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev gir1.2-webkit2-4.1 libgirepository1.0-dev libcairo2-dev pkg-config python3-gi
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run PyInstaller Build
+        run: ${{ matrix.run_cmd }}
+
+      - name: Package Distribution (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          Compress-Archive -Path "dist\cOCR_Workbench\*" -DestinationPath "${{ matrix.archive_name }}"
+
+      - name: Package Distribution (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          tar -czvf "${{ matrix.archive_name }}" -C dist/cOCR_Workbench .
+
+      - name: Package Distribution (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          cd dist
+          if [ -d "cOCR Workbench.app" ]; then
+            zip -r "../${{ matrix.archive_name }}" "cOCR Workbench.app" CARA_PENGGUNAAN.txt 2>/dev/null || zip -r "../${{ matrix.archive_name }}" "cOCR Workbench.app"
+          else
+            zip -r "../${{ matrix.archive_name }}" cOCR_Workbench
+          fi
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.archive_name }}
+
+      - name: Release to GitHub (on Tag)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ matrix.archive_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

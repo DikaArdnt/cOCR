@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<!--
+  cOCR Workbench
+  
+  Copyright (C) 2026 Dika Ardianta
+  Copyright (C) 2026 Hisoka Labs
+  
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU Affero General Public License
+  as published by the Free Software Foundation, either version 3
+  of the License, or (at your option) any later version.
+  
+  See LICENSE for details.
+-->
+
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#0d1117">
+  <title>cOCR Workbench - Document Extraction &amp; Restructuring</title>
+  <link rel="icon" type="image/png" href="/assets/cocr.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Top App Bar -->
+    <header class="app-bar" role="banner">
+      <div class="app-bar-content">
+        <div class="brand">
+          <div class="brand-icon" aria-hidden="true">
+            <img src="/assets/cocr.png" alt="cOCR Logo" width="28" height="28" style="border-radius: 6px; display: block; object-fit: contain;">
+          </div>
+          <div class="brand-titles">
+            <h1 data-i18n="appTitle">cOCR Workbench</h1>
+            <p data-i18n="appSubtitle">Batch digitize visual documents and screenshots into Markdown, Word, and PDF</p>
+          </div>
+        </div>
+
+        <div class="app-bar-actions">
+          <div class="hardware-chip" id="system-status-chip" role="status" aria-label="Hardware acceleration status" data-i18n-attr="aria-label:systemStatusAria">
+            <span class="chip-dot" aria-hidden="true"></span>
+            <span id="device-label" data-i18n="checkingDevice">Checking device...</span>
+          </div>
+
+          <!-- Language Selector Dropdown -->
+          <div class="lang-selector-wrapper" id="lang-selector-wrapper">
+            <button
+              type="button"
+              class="btn-lang-toggle"
+              id="btn-lang-toggle"
+              aria-label="Select application language"
+              aria-expanded="false"
+              aria-haspopup="listbox"
+              title="Change language"
+              data-i18n-attr="title:langToggleTitle"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="2" y1="12" x2="22" y2="12"/>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+              </svg>
+              <span id="current-lang-code" class="current-lang-code">EN</span>
+              <svg class="lang-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+            <ul class="lang-dropdown-menu" id="lang-dropdown-menu" role="listbox" aria-label="Select language" hidden>
+              <!-- Dynamically populated by i18n.js -->
+            </ul>
+          </div>
+
+          <button
+            type="button"
+            class="btn-theme-toggle"
+            id="btn-theme-toggle"
+            aria-label="Switch light or dark display mode"
+            title="Switch display mode"
+            data-i18n-attr="aria-label:themeToggleAria,title:themeToggleTitle"
+          >
+            <span class="theme-icon icon-sun" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="5"/>
+                <line x1="12" y1="1" x2="12" y2="3"/>
+                <line x1="12" y1="21" x2="12" y2="23"/>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                <line x1="1" y1="12" x2="3" y2="12"/>
+                <line x1="21" y1="12" x2="23" y2="12"/>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+              </svg>
+            </span>
+            <span class="theme-icon icon-moon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+              </svg>
+            </span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Workspace Grid -->
+    <main class="main-content" id="main-content">
+      <!-- Left: Configuration Panel -->
+      <section class="card config-card" aria-labelledby="heading-config">
+        <div class="card-header">
+          <div>
+            <h2 id="heading-config" class="card-title" data-i18n="configTitle">Processing Configuration</h2>
+            <p class="card-subtitle" data-i18n="configSubtitle">Select document images and specify output formats</p>
+          </div>
+        </div>
+
+        <form id="ocr-form" class="form-flow" onsubmit="event.preventDefault();">
+          <!-- Input Source Selection: Local Folder vs Upload -->
+          <div class="input-source-group">
+            <label class="field-label" id="label-source-mode" data-i18n="imageSourceLabel">Image Source</label>
+            <div class="segmented-control" role="tablist" aria-labelledby="label-source-mode">
+              <button
+                type="button"
+                class="segment-btn active"
+                id="btn-source-folder"
+                role="tab"
+                aria-selected="true"
+                aria-controls="panel-source-folder"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                </svg>
+                <span data-i18n="tabLocalFolder">Local Folder</span>
+              </button>
+              <button
+                type="button"
+                class="segment-btn"
+                id="btn-source-upload"
+                role="tab"
+                aria-selected="false"
+                aria-controls="panel-source-upload"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                </svg>
+                <span data-i18n="tabUploadFiles">Upload Files</span>
+              </button>
+            </div>
+
+            <!-- Panel 1: Local Folder Path -->
+            <div class="source-panel active" id="panel-source-folder" role="tabpanel" aria-labelledby="btn-source-folder">
+              <div class="outlined-field">
+                <label for="folder-path-input" data-i18n="folderPathLabel">Folder Directory Path</label>
+                <div class="field-input-row">
+                  <input
+                    type="text"
+                    id="folder-path-input"
+                    name="folder_path"
+                    placeholder="e.g. D:\Documents\Scanned_Docs"
+                    autocomplete="off"
+                    spellcheck="false"
+                    data-i18n-attr="placeholder:folderPathPlaceholder"
+                  >
+                  <button
+                    type="button"
+                    id="btn-browse-folder"
+                    class="btn btn-secondary"
+                    aria-label="Open dialog to select folder"
+                    title="Select folder containing images"
+                    data-i18n="browseFolderBtn"
+                    data-i18n-attr="aria-label:browseFolderAria,title:browseFolderTitle"
+                  >
+                    Browse Folder
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Panel 2: Drag & Drop / File Upload -->
+            <div class="source-panel" id="panel-source-upload" role="tabpanel" aria-labelledby="btn-source-upload">
+              <div class="dropzone" id="dropzone" tabindex="0" role="region" aria-label="Image drag and drop area" data-i18n-attr="aria-label:dropzoneAria">
+                <input
+                  type="file"
+                  id="file-upload-input"
+                  multiple
+                  accept=".jpg,.jpeg,.png,.webp,.bmp"
+                  class="sr-only"
+                >
+                <div class="dropzone-content">
+                  <div class="dropzone-icon" aria-hidden="true">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                      <polyline points="17 8 12 3 7 8"/>
+                      <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                  </div>
+                  <div class="dropzone-text">
+                    <p class="dropzone-title" data-i18n="dropzoneTitle">Drag and drop images here</p>
+                    <p class="dropzone-subtitle" data-i18n="dropzoneSubtitle">or click to browse files (.jpg, .png, .jpeg, .webp)</p>
+                  </div>
+                </div>
+              </div>
+              <div id="upload-status" class="upload-status" aria-live="polite"></div>
+            </div>
+
+            <div class="field-helper" id="folder-scan-meta" aria-live="polite" data-i18n="metaNoFilesSelected">
+              No files selected. Specify a folder or drag images to the upload area.
+            </div>
+          </div>
+
+          <!-- Document Formats (Filter Chips) -->
+          <div class="form-group">
+            <span class="field-label" id="label-formats" data-i18n="outputFormatsLabel">Output Document Formats</span>
+            <div class="chips-group" role="group" aria-labelledby="label-formats">
+              <label class="filter-chip" for="fmt-md" title="Markdown Document Format (.md)" data-i18n-attr="title:chipTitleMd">
+                <input type="checkbox" id="fmt-md" name="formats" value="md" checked>
+                <span class="chip-checkmark" aria-hidden="true">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </span>
+                <span class="chip-text">Markdown</span>
+                <span class="chip-badge">.md</span>
+              </label>
+
+              <label class="filter-chip" for="fmt-docx" title="Microsoft Word Document Format (.docx)" data-i18n-attr="title:chipTitleDocx">
+                <input type="checkbox" id="fmt-docx" name="formats" value="docx" checked>
+                <span class="chip-checkmark" aria-hidden="true">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </span>
+                <span class="chip-text">Word</span>
+                <span class="chip-badge">.docx</span>
+              </label>
+
+              <label class="filter-chip" for="fmt-pdf" title="PDF Document Format (.pdf)" data-i18n-attr="title:chipTitlePdf">
+                <input type="checkbox" id="fmt-pdf" name="formats" value="pdf" checked>
+                <span class="chip-checkmark" aria-hidden="true">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </span>
+                <span class="chip-text">PDF</span>
+                <span class="chip-badge">.pdf</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Compute Device & Layout Mode -->
+          <div class="form-row-responsive">
+            <div class="form-group flex-1">
+              <label class="field-label" for="device-select" data-i18n="accelDeviceLabel">Acceleration Device</label>
+              <div class="select-wrapper">
+                <select id="device-select" name="device" title="Select OCR processing acceleration device" data-i18n-attr="title:deviceSelectTitle">
+                  <option value="cpu" selected data-i18n="deviceOptionCpu">CPU (Multi-Threading)</option>
+                  <option value="gpu" id="opt-gpu" data-i18n="deviceOptionGpu">GPU (CUDA / DirectML)</option>
+                </select>
+                <div class="select-arrow" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="6 9 12 15 18 9"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group flex-1">
+              <label class="field-label" for="layout-mode-select" data-i18n="layoutModeLabel">Document Layout Mode</label>
+              <div class="select-wrapper">
+                <select id="layout-mode-select" name="mode" title="Select document layout mode" data-i18n-attr="title:layoutSelectTitle">
+                  <option value="auto" selected data-i18n="modeAuto">Auto Detect (Document Layout)</option>
+                  <option value="quiz" data-i18n="modeQuiz">Quiz Screenshot (2-Card Split)</option>
+                  <option value="document_mcq" data-i18n="modeDocumentMcq">Exam Paper &amp; Multiple Choice</option>
+                  <option value="worksheet" data-i18n="modeWorksheet">Sectioned Worksheet &amp; Fill-ins</option>
+                  <option value="full" data-i18n="modeFull">Freeform Document &amp; Full Text</option>
+                </select>
+                <div class="select-arrow" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="6 9 12 15 18 9"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Optional Output Folder -->
+          <div class="form-group">
+            <div class="outlined-field">
+              <label for="output-dir-input" data-i18n="outputDirLabel">Output Destination Folder (Optional)</label>
+              <input
+                type="text"
+                id="output-dir-input"
+                name="output_dir"
+                placeholder="Default: output folder inside source directory"
+                autocomplete="off"
+                spellcheck="false"
+                data-i18n-attr="placeholder:outputDirPlaceholder"
+              >
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button
+              type="button"
+              id="btn-start-process"
+              class="btn btn-primary btn-cta"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                <polygon points="5 3 19 12 5 21 5 3"/>
+              </svg>
+              <span id="btn-start-label" data-i18n="btnStartExtraction">Start Document Extraction</span>
+            </button>
+          </div>
+        </form>
+
+        <div class="feature-callout">
+          <div class="callout-icon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </div>
+          <div class="callout-body">
+            <strong data-i18n="calloutTitle">Watermark &amp; Navigation Filtering</strong>
+            <p data-i18n="calloutDesc">Detects angled diagonal watermarks, filters footer page numbers, and excludes on-screen navigation elements.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right: Results Panel -->
+      <section class="card results-card" aria-labelledby="heading-results">
+        <div class="card-header">
+          <div>
+            <h2 id="heading-results" class="card-title" data-i18n="resultsTitle">Monitoring &amp; Extracted Results</h2>
+            <p class="card-subtitle" data-i18n="resultsSubtitle">Progress monitoring and structured document verification</p>
+          </div>
+          <span class="status-indicator-pill status-idle" id="task-badge" data-i18n="statusIdle">Idle</span>
+        </div>
+
+        <div id="error-banner" class="banner banner-error" role="alert" style="display: none;">
+          <div class="banner-icon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+          </div>
+          <div class="banner-body">
+            <strong data-i18n="errorBannerTitle">An Error Occurred</strong>
+            <span id="error-desc"></span>
+          </div>
+          <button type="button" class="btn-icon" id="btn-close-error" aria-label="Dismiss error message" data-i18n-attr="aria-label:dismissErrorAria">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="progress-box" id="progress-section" style="display: none;">
+          <div class="progress-header">
+            <span id="progress-message" class="progress-status-text" data-i18n="progressInitializing">Initializing...</span>
+            <span id="progress-counter" class="progress-count-badge">0 / 0</span>
+          </div>
+          <div class="progress-track" role="progressbar" id="progress-bar-track" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-fill" id="progress-bar-fill" style="width: 0%;"></div>
+          </div>
+          <div class="progress-footer">
+            <span><span data-i18n="elapsedTimeLabel">Elapsed Time:</span> <strong id="timer-label">0.0s</strong></span>
+          </div>
+        </div>
+
+        <div class="stats-row" id="stats-grid" style="display: none;">
+          <div class="metric-card">
+            <span class="metric-label" data-i18n="metricTotalFiles">Total Files</span>
+            <strong class="metric-num" id="stat-total">0</strong>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label" data-i18n="metricUniqueFiles">Unique Files</span>
+            <strong class="metric-num" id="stat-unique">0</strong>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label" data-i18n="metricDuplicates">Duplicates Skipped</span>
+            <strong class="metric-num" id="stat-duplicates">0</strong>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label" data-i18n="metricDuration">Total Duration</span>
+            <strong class="metric-num" id="stat-duration">0.0s</strong>
+          </div>
+        </div>
+
+        <!-- Download Action Bar -->
+        <div class="action-bar-download" id="download-bar" style="display: none;">
+          <div class="download-bar-info">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            <strong data-i18n="downloadBarLabel">Download Exported Files:</strong>
+          </div>
+          <div class="download-buttons-group">
+            <a id="btn-download-md" class="btn btn-download-chip" href="#" download style="display: none;">
+              Markdown (.md)
+            </a>
+            <a id="btn-download-docx" class="btn btn-download-chip" href="#" download style="display: none;">
+              Word (.docx)
+            </a>
+            <a id="btn-download-pdf" class="btn btn-download-chip" href="#" download style="display: none;">
+              PDF (.pdf)
+            </a>
+          </div>
+        </div>
+
+        <!-- Results Tabbed Viewer -->
+        <div class="results-viewer" id="tabs-container" style="display: none;">
+          <nav class="tab-strip" role="tablist">
+            <button
+              type="button"
+              class="tab-item active"
+              id="tab-btn-preview"
+              role="tab"
+              aria-selected="true"
+              aria-controls="tab-content-preview"
+              data-i18n="tabPreview"
+            >
+              Document Items Preview
+            </button>
+            <button
+              type="button"
+              class="tab-item"
+              id="tab-btn-markdown"
+              role="tab"
+              aria-selected="false"
+              aria-controls="tab-content-markdown"
+              data-i18n="tabMarkdown"
+            >
+              Markdown Document
+            </button>
+            <button
+              type="button"
+              class="tab-item"
+              id="tab-btn-files"
+              role="tab"
+              aria-selected="false"
+              aria-controls="tab-content-files"
+              data-i18n="tabFiles"
+            >
+              Files Table
+            </button>
+          </nav>
+
+          <div class="tab-body">
+            <!-- Panel 1: Visual Cards Deck Preview -->
+            <div class="tab-view active" id="tab-content-preview" role="tabpanel" aria-labelledby="tab-btn-preview">
+              <div id="cards-preview-list" class="cards-deck"></div>
+            </div>
+
+            <!-- Panel 2: Raw Markdown Text -->
+            <div class="tab-view" id="tab-content-markdown" role="tabpanel" aria-labelledby="tab-btn-markdown">
+              <div class="markdown-toolbar">
+                <button type="button" class="btn btn-secondary btn-sm" id="btn-copy-markdown">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                  </svg>
+                  <span id="btn-copy-markdown-text" data-i18n="copyMarkdownBtn">Copy Markdown Text</span>
+                </button>
+              </div>
+              <pre class="markdown-preview" id="markdown-raw-text"><code></code></pre>
+            </div>
+
+            <!-- Panel 3: Files Status Table -->
+            <div class="tab-view" id="tab-content-files" role="tabpanel" aria-labelledby="tab-btn-files">
+              <div class="table-frame">
+                <table class="data-table" id="files-table">
+                  <thead>
+                    <tr>
+                      <th scope="col" data-i18n="thFilename">Filename</th>
+                      <th scope="col" data-i18n="thParsedPage">Parsed Page</th>
+                      <th scope="col" data-i18n="thResolution">Resolution</th>
+                      <th scope="col" data-i18n="thStatus">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="files-table-body"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Initial Empty State -->
+        <div class="empty-state-canvas" id="empty-state">
+          <div class="empty-icon-wrap" aria-hidden="true">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+          </div>
+          <h3 data-i18n="emptyStateTitle">No Documents Processed Yet</h3>
+          <p data-i18n="emptyStateDesc">
+            Specify an image folder or upload document files in the configuration panel on the left,
+            then click Start Document Extraction.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer" role="contentinfo">
+      <p data-i18n="footerText">cOCR Workbench. Local on-device document and screenshot processing with zero external data transmission.</p>
+    </footer>
+  </div>
+
+  <script src="/static/i18n.js"></script>
+  <script src="/static/locales/en.js"></script>
+  <script src="/static/locales/id.js"></script>
+  <script src="/static/app.js"></script>
+</body>
+</html>

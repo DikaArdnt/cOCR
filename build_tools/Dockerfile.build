@@ -1,0 +1,29 @@
+# Dockerfile untuk mengompilasi cOCR Workbench ke Linux Binary (ELF) dari mesin apapun
+FROM python:3.12-slim-bookworm
+
+# Pasang dependensi sistem dan WebKitGTK untuk pywebview di Linux
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libwebkit2gtk-4.1-dev \
+    gir1.2-webkit2-4.1 \
+    libgirepository1.0-dev \
+    libcairo2-dev \
+    pkg-config \
+    python3-gi \
+    python3-gi-cairo \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Salin dependensi proyek terlebih dahulu untuk caching layer
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Salin seluruh kode proyek
+COPY . .
+
+# Jalankan proses build ke mode onedir
+RUN python3 build_tools/build_exe.py --mode onedir
+
+# Perintah default ketika container dijalankan: salin hasil ke folder /output di host
+CMD ["sh", "-c", "cp -r dist/cOCR_Workbench/* /output/ && echo '[INFO] Kompilasi Linux selesai. Hasil tersimpan di /output'"]
